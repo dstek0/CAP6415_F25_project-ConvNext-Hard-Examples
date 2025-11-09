@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data and models (too large for git)
+data/imagenet/
+data/models/
+data/*.pth
+data/*.pt
+data/*.ckpt
+*.pth
+*.pt
+*.ckpt
+
+# Results - keep structure but not large files
+results/*.png
+results/*.jpg
+results/*.jpeg
+results/**/*.png
+results/**/*.jpg
+results/**/*.jpeg
+results/*.csv
+results/**/*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+

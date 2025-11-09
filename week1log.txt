@@ -1,0 +1,121 @@
+=============================================================================
+                    WEEK 1 DEVELOPMENT LOG
+                        (Nov 2-9, 2025)
+=============================================================================
+
+Project: Probing ConvNext SOTA Model with Hard Examples
+Student: Dylan Stechmann
+Course: CAP6415 - Computer Vision, Fall 2025
+
+=============================================================================
+What I Got Done This Week:
+=============================================================================
+
+1. FIGURING OUT THE PROJECT APPROACH
+   
+   After looking at different SOTA models I decided to go
+   with ConvNext-Base which is from 2022 and modern.
+   
+   For the hard examples strategy, I'm planning to hit it from multiple angles:
+   - Adversarial attacks (starting with FGSM/PGD, maybe Auto-Attack later)
+   - Out-of-distribution scenarios 
+   - Corner cases like texture-only images or weird lighting
+   - Fine-grained classification where classes look similar
+   - Multi-object confusion
+   
+   The idea is to not just blindly attack it, but actually understand WHERE
+   and WHY it fails. That's the interesting part.
+
+2. GETTING THE ENVIRONMENT SET UP
+   
+   Spent some time getting everything installed and working:
+   - PyTorch 2.7.1 with CUDA support (running in WSL2 container)
+   - timm library for model zoo access
+   - Jupyter Lab for interactive work
+   - All the CV libraries: OpenCV, PIL, albumentations
+   - Adversarial Robustness Toolbox (IBM's ART library)
+   - Standard stuff: numpy, matplotlib, seaborn, scikit-learn
+   
+
+3. REPO STRUCTURE
+   
+   Set up the GitHub repo structure locally:
+   - notebooks/ for Jupyter experiments
+   - scripts/ for reproducible Python code
+   - results/plots/ and results/images/ for outputs
+   - data/ for datasets (won't commit large files to git)
+   
+   Created a README that explains what I'm doing and why. Need to
+   push this to GitHub tonight to meet the Week 1 deadline.
+
+=============================================================================
+Where I'm At:
+=============================================================================
+
+✓ Week 1 (Nov 2-9):  Repo setup, environment configured, model loaded
+□ Week 2 (Nov 16):   Start generating adversarial examples
+□ Week 3 (Nov 23):   Implement all attack strategies, begin analysis
+□ Week 4 (Nov 30):   Compile results, visualizations
+□ Week 5 (Dec 7):    Record demo video
+Final submission: December 8 by 11:59 PM
+
+=============================================================================
+What's Next (Week 2):
+=============================================================================
+
+Now that setup is done, time to actually start breaking things:
+
+1. Load the model and verify it works on some sample images
+2. Get baseline accuracy on a subset of ImageNet validation set
+3. Implement FGSM attack (simplest adversarial perturbation)
+4. Generate a batch of adversarial examples
+5. Start documenting what patterns I see in the failures
+6. Maybe try PGD if time permits
+
+Goal is to have at least 100-500 hard examples by end of week 2.
+
+=============================================================================
+Technical Notes & Decisions:
+=============================================================================
+
+Environment:
+- Running PyTorch 2.7.1 with CUDA support in WSL2
+- If GPU isn't accessible, PyTorch has optimized CPU kernels (MKLDNN)
+- Using Jupyter Lab for exploratory work, will convert to scripts later
+
+Dataset strategy:
+- Full ImageNet validation set is ~50K images, probably overkill
+- Starting with 1K-5K subset to keep experiments manageable
+- Can scale up if I need more data for statistical significance
+
+Attack approach:
+- Starting simple with FGSM (Fast Gradient Sign Method)
+- Will add PGD (Projected Gradient Descent) next
+- More advanced attacks (C&W, Auto-Attack) if time permits
+- Also want to try non-adversarial approaches: style transfer, synthetic images
+
+=============================================================================
+Deliverables Checklist:
+=============================================================================
+
+Development Log (10%):     [■□□□□] 1/5 weeks complete
+Description/README (10%):  [■■■■□] Good draft, needs polish
+Code Documentation (20%):  [■□□□□] Started, need more comments
+Reproducibility (30%):     [■□□□□] Basic notebook working
+Video Demo (30%):          [□□□□□] Not started yet
+
+=============================================================================
+Challenges This Week:
+=============================================================================
+
+- Docker container, dependencies, gpu passthrough
+  
+- ImageNet is huge. Need to be strategic about what subset to use. Thinking
+  I'll focus on categories that are known to be confusing (similar classes
+  like different dog breeds, or texture-heavy categories).
+  
+- Need to make sure everything is reproducible. The TA needs to be able to
+  run this, so requirements.txt and clear instructions are crucial.
+
+=============================================================================
+
