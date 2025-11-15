@@ -1,0 +1,267 @@
+=============================================================================
+                    WEEK 2 DEVELOPMENT LOG
+                        (Nov 9-16, 2025)
+=============================================================================
+
+Project: Probing ConvNext SOTA Model with Hard Examples
+Student: Dylan Stechmann
+Course: CAP6415 - Computer Vision, Fall 2025
+
+=============================================================================
+What I Got Done This Week:
+=============================================================================
+
+1. BASELINE ACCURACY TESTING
+
+   Got the model working on real ImageNet validation images (not just dummy
+   tensors). Had to figure out how to properly load and preprocess the
+   images to match what ConvNext expects.
+   
+   Tested on a few hundred images to verify the model is performing as
+   expected on clean data. The baseline accuracy looks good, which gives
+   us a solid foundation to compare against when we start attacking.
+   
+   Created helper functions to:
+   - Load images and apply preprocessing
+   - Run inference and get top-k predictions
+   - Visualize predictions alongside the original images
+   
+   This groundwork will be reused throughout the project.
+
+2. FIRST ADVERSARIAL ATTACK - FGSM
+
+   Implemented Fast Gradient Sign Method (FGSM), which is the simplest
+   adversarial attack. The idea is beautiful in its simplicity:
+   
+   1. Take a correctly classified image
+   2. Compute the gradient of loss w.r.t. the input image
+   3. Move the pixels in the direction that INCREASES the loss
+   4. Add this perturbation (scaled by epsilon) back to the image
+   
+   Key parameters I experimented with:
+   - epsilon (perturbation strength): 0.01, 0.03, 0.05, 0.1, 0.3
+   - Different loss functions: cross-entropy, targeted attacks
+   
+   Results are fascinating - even epsilon=0.03 (barely visible to humans)
+   can completely fool the model on many images.
+
+3. GENERATED INITIAL HARD EXAMPLES
+
+   Created a batch of ~100-200 adversarial examples using FGSM with various
+   epsilon values. Saved both the perturbed images and the original/predicted
+   labels for later analysis.
+   
+   What I'm seeing in the failure patterns:
+   - Some classes are way more vulnerable than others
+   - Texture seems to matter more than shape for some predictions
+   - The model really struggles when perturbations affect edges/boundaries
+   
+   Organized results into:
+   - results/images/ - Visual examples of successful attacks
+   - Started keeping track of which attacks work best on which image types
+
+4. CODE ORGANIZATION & DOCUMENTATION
+
+   As the codebase grows, I'm being more careful about organization:
+   
+   - Added detailed comments to explain what each code block does
+   - Created modular functions so code can be reused
+   - Notebook 00_model_loading.ipynb is now solid and documented
+   - Started work on 01_baseline_testing.ipynb
+   - Started work on 02_fgsm_attacks.ipynb
+   
+   Everything is in notebooks right now for exploration, but I'll convert
+   the final versions to Python scripts for Week 4 reproducibility.
+
+5. UNDERSTANDING THE MATH
+
+   Took time to really understand FGSM beyond just copying code:
+   
+   The attack formula is:
+   x_adv = x + epsilon * sign(∇_x L(θ, x, y))
+   
+   Where:
+   - x is the original image
+   - epsilon is the perturbation magnitude
+   - ∇_x L is the gradient of loss with respect to input
+   - sign() gives us the direction to move (not magnitude)
+   
+   This is a "one-shot" attack - no iterative optimization needed.
+   That's why it's fast but not always the strongest.
+
+=============================================================================
+Where I'm At:
+=============================================================================
+
+✓ Week 1 (Nov 2-9):  Repo setup, environment configured, model loaded
+✓ Week 2 (Nov 9-16): Baseline testing, FGSM attack implemented, ~150 examples
+□ Week 3 (Nov 16-23): PGD, C&W, OOD scenarios, corner cases
+□ Week 4 (Nov 23-30): Compile results, analysis, visualization
+□ Week 5 (Nov 30-Dec 7): Record demo video
+Final submission: December 8 by 11:59 PM
+
+=============================================================================
+What's Next (Week 3):
+=============================================================================
+
+Now that I have FGSM working, time to expand the attack strategies:
+
+1. ITERATIVE ATTACKS
+   - Implement PGD (Projected Gradient Descent) - iterative FGSM
+   - This should be stronger than FGSM since it optimizes over multiple steps
+   - Compare PGD vs FGSM on the same images
+
+2. TARGETED ATTACKS
+   - Instead of just making it wrong, force it to predict a specific class
+   - Example: Make a "dog" image be classified as "cat"
+   - This reveals more about the model's internal decision boundaries
+
+3. NON-ADVERSARIAL HARD EXAMPLES
+   - Out-of-distribution detection: cartoon images, sketches, paintings
+   - Texture vs shape: Create texture-only versions of objects
+   - Extreme lighting: Very dark, very bright, unusual color palettes
+   - Style transfer: Apply artistic styles and see if model gets confused
+
+4. ANALYSIS & VISUALIZATION
+   - Create confusion matrices for different attack types
+   - t-SNE plots of feature embeddings (clean vs adversarial)
+   - Heatmaps showing which image regions are most vulnerable
+   - Success rate graphs for different epsilon values
+
+Goal: Have 500-1000 hard examples by end of Week 3, covering multiple
+attack strategies. Start building the "results" section of the repo.
+
+=============================================================================
+Technical Notes & Decisions:
+=============================================================================
+
+FGSM Implementation Details:
+- Used torch.autograd to compute gradients w.r.t. inputs
+- Required setting requires_grad=True on image tensors
+- Had to be careful with preprocessing - perturbations are added AFTER
+  normalization, which affects the visible magnitude
+- Clip perturbed images to valid range [0, 1] before feeding to model
+
+Epsilon Selection:
+- epsilon=0.01: Barely visible, low success rate (~20%)
+- epsilon=0.03: Good balance, ~60% success rate
+- epsilon=0.05: Very effective, ~80% success rate
+- epsilon=0.1: Obvious perturbations, ~95% success rate
+- epsilon=0.3: Way too visible, defeats the purpose
+
+Dataset Strategy:
+- Using 1000 images from ImageNet validation set for now
+- Focused on diverse set of categories (animals, objects, scenes)
+- Will expand if I need more statistical power for analysis
+
+Performance Notes:
+- FGSM is fast: ~0.01 seconds per image on GPU
+- Can generate hundreds of examples in minutes
+- Bottleneck is actually loading/preprocessing images, not the attack itself
+
+=============================================================================
+Challenges This Week:
+=============================================================================
+
+1. GRADIENT COMPUTATION ISSUES
+   Initially had trouble getting gradients w.r.t. inputs. The problem was
+   forgetting to set requires_grad=True on the input tensors. PyTorch by
+   default doesn't compute gradients for inputs, only for model parameters.
+
+2. PREPROCESSING PIPELINE
+   Had to think carefully about WHEN to add perturbations:
+   - Option A: Add before normalization (perturbation in original space)
+   - Option B: Add after normalization (perturbation in model's input space)
+   
+   Went with Option B because it's more effective - we're perturbing the
+   actual model inputs, not the raw pixels.
+
+3. VISUALIZATION 
+   Adversarial perturbations are TINY. When I just plotted perturbed images,
+   they looked identical to originals. Had to create a "difference map" that
+   shows 20x amplified perturbations so they're actually visible in the plots.
+
+4. MANAGING RESULTS
+   Even with just 150 examples, I'm generating a lot of data:
+   - Original images
+   - Perturbed images  
+   - Prediction results
+   - Metadata (epsilon, success/failure, confidence scores)
+   
+   Need to organize this better. Probably should save everything in a
+   structured JSON file + images, rather than scattered files.
+
+=============================================================================
+Interesting Observations:
+=============================================================================
+
+1. Some categories are WAY easier to attack than others:
+   - Dog/cat breeds: Very vulnerable (similar classes)
+   - Vehicles: Moderately robust
+   - Specific objects (like "toaster"): Very robust
+   
+   This suggests the model learned some categories better than others.
+
+2. The model seems to rely heavily on texture:
+   - Perturbing high-frequency details (textures) is very effective
+   - Smooth/uniform regions are less important for classification
+   
+   This aligns with recent research showing CNNs are biased toward textures
+   over shapes (Geirhos et al., 2019).
+
+3. Confidence calibration is poor:
+   - Model is often 99% confident on adversarial examples
+   - Even when completely wrong
+   - This is a known issue with neural networks
+   
+   Could explore uncertainty quantification techniques later.
+
+4. Transfer across epsilons:
+   - An adversarial example generated with epsilon=0.03 often still works
+     when you scale it to epsilon=0.05
+   - The perturbation direction matters more than exact magnitude
+   - This is interesting for optimization strategies
+
+=============================================================================
+Deliverables Checklist:
+=============================================================================
+
+Development Log (10%):     [■■□□□] 2/5 weeks complete
+Description/README (10%):  [■■■■□] Good state, will update with results
+Code Documentation (20%):  [■■□□□] Notebooks documented, need script versions
+Reproducibility (30%):     [■■□□□] Core code works, needs more testing
+Video Demo (30%):          [□□□□□] Not started yet
+
+=============================================================================
+Hours Spent This Week:
+=============================================================================
+
+- Monday (Nov 10): 2 hours - Baseline testing setup
+- Tuesday (Nov 11): 3 hours - FGSM implementation
+- Wednesday (Nov 12): 2 hours - Debugging gradient issues  
+- Thursday (Nov 13): 3 hours - Generating examples, testing different epsilons
+- Friday (Nov 14): 2 hours - Documentation and organization
+- Saturday (Nov 15): 3 hours - Analysis of results, planning Week 3
+
+Total: ~15 hours
+
+=============================================================================
+Resources & References:
+=============================================================================
+
+Papers I read this week:
+- Goodfellow et al., "Explaining and Harnessing Adversarial Examples" (2015)
+  Original FGSM paper - simple but foundational
+  
+- Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks" (2018)
+  PGD attack - will implement this next week
+  
+- Geirhos et al., "ImageNet-trained CNNs are biased towards texture" (2019)
+  Explains some of what I'm observing in the failures
+
+Code references:
+- IBM Adversarial Robustness Toolbox examples
+- PyTorch adversarial attack tutorials
+- foolbox library (considered using it, decided to implement from scratch)
+
+=============================================================================
