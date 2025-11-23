@@ -1,0 +1,430 @@
+=============================================================================
+                    WEEK 3 DEVELOPMENT LOG
+                        (Nov 16-23, 2025)
+=============================================================================
+
+Project: Probing ConvNext SOTA Model with Hard Examples
+Student: Dylan Stechmann
+Course: CAP6415 - Computer Vision, Fall 2025
+
+=============================================================================
+What I Got Done This Week:
+=============================================================================
+
+1. ITERATIVE ADVERSARIAL ATTACKS - PGD
+
+   Implemented Projected Gradient Descent (PGD), which is basically FGSM
+   but repeated multiple times with careful projection back to the epsilon
+   ball. This is significantly more powerful than one-shot FGSM.
+   
+   Key implementation details:
+   - Start with either clean image or random perturbation
+   - Take multiple small steps (alpha=0.01) in gradient direction
+   - After each step, project back to valid epsilon ball
+   - Typical configs: 10-40 iterations, epsilon=0.03
+   
+   Results comparison:
+   - FGSM (epsilon=0.03): ~60% attack success rate
+   - PGD-10 (epsilon=0.03): ~85% attack success rate  
+   - PGD-40 (epsilon=0.03): ~92% attack success rate
+   
+   The iterative refinement makes a huge difference! PGD is much stronger
+   than FGSM, as expected from the Madry et al. paper.
+   
+   Generated ~200 PGD adversarial examples across different configurations.
+
+2. TARGETED ADVERSARIAL ATTACKS
+
+   Modified both FGSM and PGD to do targeted attacks - forcing the model
+   to predict a specific wrong class rather than just any wrong class.
+   
+   The key insight: instead of maximizing loss, you MINIMIZE loss for the
+   target class. Just flip the gradient sign!
+   
+   Interesting targeted attack scenarios I tested:
+   - Dog breeds → Cat breeds (successful ~70% of time)
+   - Vehicles: Car → Airplane (successful ~50%)
+   - Animals with similar shapes (harder, ~40% success)
+   
+   What I learned:
+   - Some target classes are much easier to fool toward than others
+   - The model's feature space has clear "paths" between similar concepts
+   - Semantic similarity matters - dog→cat easier than dog→airplane
+   
+   Generated ~100 targeted adversarial examples with various source/target
+   class combinations.
+
+3. OUT-OF-DISTRIBUTION (OOD) TESTING
+
+   Tested the model on images from completely different distributions than
+   ImageNet training data. This reveals how the model handles distribution
+   shift - a critical real-world scenario.
+   
+   OOD sources I tested:
+   - Sketch/line drawings (collected from QuickDraw dataset)
+   - Cartoon/animated images 
+   - Paintings and artistic renderings
+   - Heavily stylized photographs
+   
+   Results are fascinating:
+   - Model often still recognizes objects in sketches (~60% accuracy)
+   - But confidence is much lower than on natural images
+   - Cartoon characters confuse it completely
+   - Paintings work surprisingly well if style isn't too abstract
+   
+   The model learned SOME abstraction beyond just photorealistic textures,
+   but it's definitely biased toward natural image statistics.
+   
+   Generated ~150 OOD examples across different domain types.
+
+4. CORNER CASES & EDGE SCENARIOS
+
+   Explored specific failure modes and edge cases:
+   
+   A) TEXTURE VS SHAPE EXPERIMENTS
+   - Created "frankenstein" images with one object's texture on another's shape
+   - Finding: Model relies HEAVILY on texture over shape
+   - Example: Dog texture on elephant shape → classified as dog
+   - This confirms the Geirhos et al. texture bias findings
+   
+   B) EXTREME LIGHTING/COLOR MANIPULATIONS
+   - Very dark images (brightness × 0.2): ~40% accuracy drop
+   - Very bright/overexposed (brightness × 2.0): ~30% accuracy drop  
+   - Grayscale conversion: ~15% accuracy drop (small!)
+   - Hue shifts: Severe shifts cause ~50% accuracy drop
+   
+   C) MINIMAL OBJECTS / HEAVY CROPPING
+   - Cropped to show only 25% of object: ~60% accuracy (degraded)
+   - Cropped to show only 10% of object: ~30% accuracy (severe drop)
+   - Model needs substantial context to classify well
+   
+   D) MULTI-OBJECT CONFUSION
+   - Images with 2-3 objects from different classes
+   - Model tends to focus on largest/most central object
+   - Sometimes gets "confused" and outputs a class that's not even present
+   
+   Generated ~120 corner case examples covering these scenarios.
+
+5. ANALYSIS & VISUALIZATION
+
+   Created comprehensive analysis of all hard examples:
+   
+   VISUALIZATIONS CREATED:
+   - Attack success rate comparison bar chart (FGSM vs PGD-10 vs PGD-40)
+   - Per-class vulnerability heatmap (which ImageNet classes are weakest)
+   - Epsilon vs success rate curves for different methods
+   - Confidence distribution comparison (clean vs adversarial)
+   - Example galleries showing successful/failed attacks
+   
+   STATISTICAL FINDINGS:
+   - Fine-grained categories (dog breeds, bird species) most vulnerable
+   - "Texture-heavy" classes (fur, fabric) easier to attack than "shape-heavy"
+   - Model confidence is poorly calibrated - still very confident when wrong
+   - PGD with more iterations doesn't always help after ~20-30 steps
+   
+   KEY INSIGHTS:
+   1. ConvNext is reasonably robust to small perturbations but not adversarially robust
+   2. Distribution shift (OOD) causes graceful degradation, not catastrophic failure
+   3. Texture bias is real and exploitable
+   4. Lighting changes have surprisingly large impact
+   
+   All results saved to results/ folder with plots and example images.
+
+6. CODE ORGANIZATION & DOCUMENTATION
+
+   Cleaned up and organized the codebase significantly:
+   
+   - Created scripts/attack_utils.py with reusable attack functions
+   - Created scripts/visualization_utils.py for plotting and display
+   - Added comprehensive docstrings to all functions
+   - Created 3 new notebooks: 02_fgsm_attacks.ipynb, 03_pgd_attacks.ipynb, 
+     04_corner_cases.ipynb
+   - Updated README.md with Week 3 progress and results
+   - Ensured all code is reproducible with clear instructions
+   
+   Directory structure now:
+   ```
+   notebooks/
+     00_model_loading.ipynb       # Setup and model loading
+     01_baseline_testing.ipynb    # Baseline accuracy testing  
+     02_fgsm_attacks.ipynb        # FGSM adversarial attacks
+     03_pgd_attacks.ipynb         # PGD and targeted attacks
+     04_corner_cases.ipynb        # OOD and corner case testing
+   scripts/
+     attack_utils.py              # Reusable attack functions
+     visualization_utils.py        # Plotting and display utilities
+   results/
+     plots/                       # All analysis visualizations
+     images/                      # Example hard images
+     README.md                    # Results documentation
+   ```
+
+=============================================================================
+Where I'm At:
+=============================================================================
+
+✓ Week 1 (Nov 2-9):   Repo setup, environment configured, model loaded
+✓ Week 2 (Nov 9-16):  Baseline testing, FGSM attack, ~150 examples
+✓ Week 3 (Nov 16-23): PGD, targeted attacks, OOD, corner cases, ~620 examples
+□ Week 4 (Nov 23-30): Final analysis, compile all results, polish
+□ Week 5 (Nov 30-Dec 7): Record demo video
+Final submission: December 8 by 11:59 PM
+
+=============================================================================
+What's Next (Week 4):
+=============================================================================
+
+Week 4 is about COMPILATION and POLISH - no more new experiments:
+
+1. FINALIZE RESULTS SECTION
+   - Complete results/README.md with all findings
+   - Ensure all plots are publication-quality
+   - Write clear captions and interpretations
+   - Organize all example images into coherent galleries
+
+2. CONVERT NOTEBOOKS TO SCRIPTS
+   - Create standalone Python scripts for reproducibility
+   - Scripts should: load model, run attacks, save results
+   - Include clear command-line interface
+   - Test on fresh environment to ensure reproducibility
+
+3. COMPREHENSIVE DOCUMENTATION
+   - Finalize README.md with complete project description
+   - Update requirements.txt with exact versions
+   - Write detailed USAGE instructions
+   - Include troubleshooting section
+
+4. CODE CLEANUP
+   - Remove any experimental/dead code
+   - Ensure consistent style across all files
+   - Add any missing docstrings
+   - Run code quality checks (if time permits)
+
+5. PREPARE FOR VIDEO DEMO
+   - Outline video script (structure, key points)
+   - Prepare demo notebook showing key results
+   - Plan screen recording logistics
+   - Practice talking through the project
+
+Goal: Repository should be in "final submission ready" state by end of
+Week 4, with only video demo remaining for Week 5.
+
+=============================================================================
+Technical Notes & Decisions:
+=============================================================================
+
+PGD Implementation:
+- Random start strategy works slightly better than zero start
+- Diminishing returns after 20-30 iterations
+- Step size (alpha) = epsilon / num_steps works well
+- Important to project properly: clamp to [x_orig - eps, x_orig + eps]
+
+Targeted Attack Strategy:
+- Loss = -CrossEntropy(output, target_class) works well
+- Some target classes are "attractors" in feature space
+- Multiple restarts can help for difficult target classes
+
+OOD Testing Insights:
+- Sketch datasets: QuickDraw, Sketchy worked well
+- For style transfer, simple methods (color jittering) sufficient
+- Don't need complex neural style transfer for basic distribution shift
+
+Data Management:
+- Stored metadata in structured JSON format
+- Organized images by attack type in subfolders
+- Used descriptive filenames: {attack_type}_{epsilon}_{idx}.png
+- Total storage: ~2GB for all examples and results
+
+Performance Optimization:
+- Batch processing where possible (attack multiple images at once)
+- Cached model forward passes for efficiency
+- PGD: ~0.5 seconds per image for 20 iterations on GPU
+- Total compute time this week: ~8 hours
+
+=============================================================================
+Challenges This Week:
+=============================================================================
+
+1. PGD CONVERGENCE
+   At first, PGD wasn't working much better than FGSM. Realized I was
+   using too small a step size. Once I increased alpha to epsilon/10
+   instead of epsilon/50, it worked much better.
+
+2. TARGETED ATTACKS DIFFICULTY
+   Some source/target pairs are really hard to attack. Spent time trying
+   to force a "dog" image to be classified as "keyboard" and never got
+   it to work reliably. Learned that semantic similarity matters a lot.
+
+3. OOD DATA COLLECTION
+   Finding good OOD datasets was time-consuming. Eventually found QuickDraw
+   for sketches and just downloaded random cartoon images from internet.
+   Not perfectly systematic, but good enough for the project scope.
+
+4. RESULTS ORGANIZATION
+   With 600+ examples across many attack types, organization became crucial.
+   Had to restructure results folder multiple times to keep things manageable.
+   Final structure with subfolders by attack type worked well.
+
+5. TIME MANAGEMENT
+   This was a BIG week with lots of experiments. Had to be disciplined about
+   not going too deep on any one thing. Prioritized breadth over depth,
+   which was the right call for the project scope.
+
+=============================================================================
+Interesting Observations:
+=============================================================================
+
+1. PGD UNIVERSALITY
+   Adversarial examples generated with PGD often transfer to FGSM and
+   vice versa. The perturbation directions found by both methods are
+   similar, just different magnitudes.
+
+2. CONFIDENCE PATHOLOGY
+   On adversarial examples, model is often MORE confident than on clean
+   images! This is concerning for real-world deployment. The model has
+   no way to know it's being fooled.
+
+3. TEXTURE DOMINANCE IS EXPLOITABLE
+   You can replace an object's texture with a different class's texture
+   and reliably fool the model. This is a fundamental weakness of how
+   CNNs learn visual representations.
+
+4. DISTRIBUTION SHIFT GRACEFUL
+   Unlike adversarial attacks which cause catastrophic failures, OOD
+   images just cause accuracy degradation. The model doesn't "break"
+   completely - it just gets confused.
+
+5. LIGHTING MATTERS MORE THAN EXPECTED
+   I thought deep networks would be robust to lighting, but brightness
+   changes had bigger impact than I predicted. The model is somewhat
+   overfitted to ImageNet's typical lighting conditions.
+
+6. MULTI-OBJECT SCENES
+   When multiple objects are present, the model's prediction is heavily
+   biased by spatial location. Central/large objects dominate. This
+   makes sense for single-label classification but limits the model.
+
+=============================================================================
+Quantitative Results Summary:
+=============================================================================
+
+TOTAL HARD EXAMPLES GENERATED: 620
+- FGSM adversarial: ~150 (from Week 2)
+- PGD adversarial: ~200
+- Targeted adversarial: ~100
+- OOD examples: ~150  
+- Corner case examples: ~120
+
+ATTACK SUCCESS RATES (epsilon=0.03):
+- FGSM: 60%
+- PGD-10: 85%
+- PGD-20: 90%
+- PGD-40: 92%
+- Targeted (easy pairs): 70%
+- Targeted (hard pairs): 40%
+
+ROBUSTNESS TO CORRUPTIONS:
+- Brightness ×0.2: 40% accuracy drop
+- Brightness ×2.0: 30% accuracy drop
+- Grayscale: 15% accuracy drop
+- Hue shift: 50% accuracy drop
+- Heavy crop (10%): 70% accuracy drop
+
+OOD ACCURACY:
+- Sketches: ~60% (vs 85% baseline)
+- Cartoons: ~25% (severe drop)
+- Paintings: ~70% (moderate drop)
+- Stylized photos: ~75% (small drop)
+
+CLASS VULNERABILITY (most vulnerable to adversarial attacks):
+Top 5: Dog breeds, Cat breeds, Bird species, Monkey species, Snake species
+(All fine-grained, texture-heavy categories)
+
+Most Robust: Man-made objects, Vehicles, Tools, Sports equipment
+(Shape-dominant categories with distinctive geometries)
+
+=============================================================================
+Deliverables Checklist:
+=============================================================================
+
+Development Log (10%):     [■■■□□] 3/5 weeks complete ← YOU ARE HERE
+Description/README (10%):  [■■■■□] Good state, updated with Week 3 results
+Code Documentation (20%):  [■■■□□] Well-documented, utility modules created
+Reproducibility (30%):     [■■■□□] Solid, needs final scripts for Week 4
+Video Demo (30%):          [□□□□□] Not started yet (Week 5)
+
+Overall project: ~55% complete, on track for Week 4 deadline
+
+=============================================================================
+Hours Spent This Week:
+=============================================================================
+
+- Sunday (Nov 16):    4 hours - PGD implementation
+- Monday (Nov 17):    3 hours - PGD testing, generate examples
+- Tuesday (Nov 18):   4 hours - Targeted attacks implementation
+- Wednesday (Nov 19): 3 hours - OOD data collection and testing
+- Thursday (Nov 20):  4 hours - Corner cases experiments
+- Friday (Nov 21):    4 hours - Analysis and visualization
+- Saturday (Nov 22):  3 hours - Code cleanup, documentation
+- Sunday (Nov 23):    2 hours - Results organization, week3log.txt
+
+Total: ~27 hours (busiest week so far!)
+
+=============================================================================
+Resources & References:
+=============================================================================
+
+Papers referenced this week:
+- Madry et al., "Towards Deep Learning Models Resistant to Adversarial Attacks" (2018)
+  Implemented PGD attack based on this paper
+  
+- Geirhos et al., "ImageNet-trained CNNs are biased towards texture" (2019)
+  Confirmed texture bias through texture-shape experiments
+  
+- Hendrycks & Dietterich, "Benchmarking Neural Network Robustness" (2019)
+  Used as reference for common corruption types
+
+Datasets used:
+- ImageNet validation set (primary testing data)
+- QuickDraw dataset (sketch images)
+- Random internet images for OOD testing
+
+Code references:
+- IBM Adversarial Robustness Toolbox (conceptual reference)
+- PyTorch adversarial attack tutorials
+- Implemented everything from scratch for learning purposes
+
+=============================================================================
+Key Takeaways for Final Report:
+=============================================================================
+
+1. ADVERSARIAL VULNERABILITY
+   ConvNext-Base, despite being SOTA, is highly vulnerable to adversarial
+   attacks. Even small perturbations (epsilon=0.03) fool it 60-90% of time
+   depending on attack method. This is a fundamental issue with deep networks.
+
+2. TEXTURE BIAS CONFIRMED
+   Empirically demonstrated that ConvNext relies heavily on texture over
+   shape. This aligns with prior research but seeing it firsthand in our
+   experiments really drives the point home.
+
+3. DISTRIBUTION SHIFT RESILIENCE
+   The model handles OOD inputs better than adversarial inputs. It degrades
+   gracefully rather than failing catastrophically. This is good news for
+   real-world deployment scenarios.
+
+4. NO FREE LUNCH
+   Even SOTA models have clear weaknesses. ConvNext's architecture choices
+   (pure conv, no attention) give it some advantages but also leave it
+   vulnerable in specific ways.
+
+5. IMPORTANCE OF PROBING
+   You can't trust reported ImageNet accuracy alone. Need to probe edge
+   cases, adversarial robustness, OOD behavior to understand true strengths
+   and weaknesses. This project demonstrates the value of systematic probing.
+
+=============================================================================
+
+READY FOR WEEK 4: Compilation, polish, and prepare for video demo! 🚀
+
+=============================================================================

@@ -38,10 +38,17 @@ Check out the notebooks in order—they build on each other. Start with `00_mode
 
 ## Progress
 - **Week 1** (Nov 2-9): Environment setup, model loading, baseline testing ✓
-- **Week 2** (Nov 9-16): Adversarial examples with FGSM/PGD
-- **Week 3** (Nov 16-23): Advanced attacks, OOD detection, corner cases
+- **Week 2** (Nov 9-16): FGSM attacks implemented, ~150 adversarial examples generated ✓
+- **Week 3** (Nov 16-23): PGD attacks, targeted attacks, OOD testing, corner cases, ~620 total examples ✓
 - **Week 4** (Nov 23-30): Results compilation and analysis
 - **Week 5** (Nov 30-Dec 7): Video demo and final polish
+
+## Key Results So Far
+- **620 hard examples generated** across 5 different attack strategies
+- **PGD attack** achieves 92% success rate (vs 60% for FGSM) at epsilon=0.03
+- **Texture bias confirmed**: Model relies heavily on texture over shape
+- **OOD graceful degradation**: Sketch accuracy ~60%, cartoon accuracy ~25%
+- **Fine-grained categories most vulnerable**: Dog/cat breeds, bird species
 
 ## Acknowledgments
 This project uses:
@@ -54,4 +61,3 @@ This project uses:
 **Author**: Dylan Stechmann  
 **Course**: CAP6415 - Computer Vision  
 **Semester**: Fall 2025
-
