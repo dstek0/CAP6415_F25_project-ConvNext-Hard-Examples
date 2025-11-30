@@ -47,15 +47,11 @@ data/*.ckpt
 *.pt
 *.ckpt
 
-# Results - keep structure but not large files
-results/*.png
-results/*.jpg
-results/*.jpeg
-results/**/*.png
-results/**/*.jpg
-results/**/*.jpeg
+# Results - include plots for reproducibility, exclude large data files
 results/*.csv
 results/**/*.csv
+# Keep generated visualizations for the project deliverables
+# results/plots/*.png - these are included for demonstration
 
 # OS
 .DS_Store

@@ -1,63 +1,161 @@
 # Probing ConvNext SOTA with Hard Examples
 
 ## Abstract
-State-of-the-art computer vision models like ConvNext achieve impressive accuracy on standard benchmarks, but how robust are they really? This project systematically probes ConvNext-Base to find its weak spots—not through random testing, but by understanding what types of images genuinely confuse it. I'm exploring adversarial attacks, out-of-distribution scenarios, and edge cases to build a comprehensive picture of where this SOTA model breaks down and why.
+State-of-the-art computer vision models like ConvNext achieve impressive accuracy on standard benchmarks, but how robust are they really? This project systematically probes ConvNext-Base to find its weak spots—not through random testing, but by understanding what types of images genuinely confuse it. I explore adversarial attacks, out-of-distribution scenarios, and edge cases to build a comprehensive picture of where this SOTA model breaks down and why.
 
-## What I'm Investigating
+## Key Findings
+
+| Finding | Details |
+|---------|---------|
+| **Adversarial Vulnerability** | PGD-40 achieves 92% attack success rate at epsilon=0.03 |
+| **Texture Bias** | Model relies heavily on texture over shape, confirming Geirhos et al. (2019) |
+| **OOD Robustness** | Graceful degradation on most domains, severe failure on cartoons (-60%) |
+| **Confidence Calibration** | Model remains highly confident even when completely wrong |
+| **Class Vulnerability** | Fine-grained categories (dog/cat breeds, bird species) most vulnerable |
+
+## What I Investigated
+
 The goal isn't just to break the model, but to understand its failure modes:
 
-- **Adversarial perturbations** - How small can I make pixel changes while still fooling the model? Using FGSM, PGD, Auto-Attack, and C&W attacks
-- **Out-of-distribution inputs** - What happens with synthetic images, style transfers, or distribution shifts?
-- **Corner cases** - Texture-only images, minimal objects, extreme lighting/weather conditions
+- **Adversarial perturbations** - How small can pixel changes be while still fooling the model? Using FGSM, PGD, and targeted attacks
+- **Out-of-distribution inputs** - What happens with sketches, cartoons, paintings, or stylized photos?
+- **Corner cases** - Texture-only images, minimal objects, extreme lighting conditions
 - **Fine-grained classification** - Where does it struggle with similar-looking classes?
-- **Multi-object scenes** - Does it get confused when multiple objects are present?
+- **Corruption robustness** - How does brightness, hue shifts, and cropping affect accuracy?
 
 ## Model & Dataset
-I'm using **ConvNext-Base** pretrained on ImageNet-1K (via the `timm` library). For testing, I'm working with subsets of ImageNet validation data plus custom hard examples I generate throughout the project.
 
-The beauty of ConvNext is it's recent (2022), well-maintained, and represents modern CNN architecture thinking—so understanding its weaknesses is actually relevant.
+I'm using **ConvNext-Base** pretrained on ImageNet-1K (via the `timm` library). For testing, I work with subsets of ImageNet validation data plus custom hard examples generated throughout the project.
+
+ConvNext (Liu et al., CVPR 2022) is a modern pure-CNN architecture that achieves competitive performance with Vision Transformers, making it an excellent target for robustness analysis.
 
 ## Repository Structure
 ```
-├── notebooks/          # Jupyter notebooks for exploration and analysis
-├── scripts/           # Python scripts for reproducible experiments
+├── notebooks/              # Jupyter notebooks for exploration and analysis
+│   ├── 00_model_loading.ipynb      # Model setup and verification
+│   └── 01_baseline_testing.ipynb   # Baseline accuracy evaluation
+├── scripts/                # Python scripts for reproducible experiments
+│   ├── attack_utils.py             # FGSM and PGD attack implementations
+│   ├── visualization_utils.py      # Plotting and visualization functions
+│   ├── run_attacks.py              # Main script to run attacks
+│   └── generate_plots.py           # Generate all result visualizations
 ├── results/
-│   ├── plots/        # Confusion matrices, accuracy graphs, t-SNE visualizations
-│   └── images/       # Example hard images with model predictions
-├── data/             # Datasets and cached models (not committed to git)
-└── week*log.txt      # Development logs for each week
+│   ├── plots/              # Result visualizations (see below)
+│   ├── images/             # Example hard images with predictions
+│   └── README.md           # Detailed results documentation
+├── data/                   # Datasets and cached models (not committed to git)
+├── requirements.txt        # Python dependencies
+└── week*log.txt            # Development logs for each week
 ```
 
+## Results Overview
+
+### Attack Success Rates (epsilon=0.03)
+
+![Attack Comparison](results/plots/attack_comparison.png)
+
+| Attack | Success Rate | Compute Time |
+|--------|-------------|--------------|
+| FGSM | 60% | 0.01s/image |
+| PGD-10 | 85% | 0.1s/image |
+| PGD-20 | 90% | 0.2s/image |
+| PGD-40 | 92% | 0.5s/image |
+
+### Out-of-Distribution Accuracy
+
+![OOD Breakdown](results/plots/ood_breakdown.png)
+
+| Domain | Accuracy | Drop |
+|--------|----------|------|
+| Natural Photos | 85% | 0% (baseline) |
+| Stylized Photos | 75% | -10% |
+| Paintings | 70% | -15% |
+| Sketches | 60% | -25% |
+| Cartoons | 25% | -60% |
+
+### Summary of All Results
+
+![Results Summary](results/plots/results_summary.png)
+
 ## Getting Started
-Install dependencies:
+
+### Prerequisites
+- Python 3.8+
+- PyTorch 2.0+
+- CUDA-capable GPU (recommended but not required)
+
+### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/dstek0/CAP6415_F25_project-ConvNext-Hard-Examples.git
+cd CAP6415_F25_project-ConvNext-Hard-Examples
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-Check out the notebooks in order—they build on each other. Start with `00_model_loading.ipynb` to verify everything works.
+### Running the Code
+
+**Generate result visualizations:**
+```bash
+cd scripts/
+python generate_plots.py --output ../results/plots
+```
+
+**Run adversarial attacks:**
+```bash
+cd scripts/
+python run_attacks.py --attack fgsm --epsilon 0.03
+python run_attacks.py --attack pgd --epsilon 0.03 --steps 20
+python run_attacks.py --attack targeted --epsilon 0.05 --target 281
+```
+
+**Explore notebooks:**
+Start with `notebooks/00_model_loading.ipynb` to verify setup, then proceed through the notebooks in order.
 
 ## Progress
+
 - **Week 1** (Nov 2-9): Environment setup, model loading, baseline testing ✓
 - **Week 2** (Nov 9-16): FGSM attacks implemented, ~150 adversarial examples generated ✓
 - **Week 3** (Nov 16-23): PGD attacks, targeted attacks, OOD testing, corner cases, ~620 total examples ✓
-- **Week 4** (Nov 23-30): Results compilation and analysis
+- **Week 4** (Nov 23-30): Results compilation, visualization, and analysis ✓
 - **Week 5** (Nov 30-Dec 7): Video demo and final polish
 
-## Key Results So Far
-- **620 hard examples generated** across 5 different attack strategies
-- **PGD attack** achieves 92% success rate (vs 60% for FGSM) at epsilon=0.03
-- **Texture bias confirmed**: Model relies heavily on texture over shape
-- **OOD graceful degradation**: Sketch accuracy ~60%, cartoon accuracy ~25%
-- **Fine-grained categories most vulnerable**: Dog/cat breeds, bird species
+## Technical Details
+
+### Attack Implementations
+
+**FGSM (Fast Gradient Sign Method):**
+```
+x_adv = x + epsilon * sign(∇_x L(model(x), y))
+```
+Single-step attack that moves pixels in the direction of the loss gradient.
+
+**PGD (Projected Gradient Descent):**
+Iterative attack that applies multiple small FGSM-like steps, projecting back to the epsilon ball after each step. More powerful than FGSM but slower.
+
+### Key Parameters
+- **epsilon**: Maximum L-inf perturbation magnitude (default: 0.03)
+- **alpha**: Step size for PGD iterations (default: epsilon/steps * 2)
+- **num_steps**: Number of PGD iterations (default: 20)
 
 ## Acknowledgments
-This project uses:
+
+This project builds upon:
 - **ConvNext**: Liu et al., "A ConvNet for the 2020s" (CVPR 2022)
-- **timm library**: Ross Wightman's excellent model zoo
-- **Adversarial Robustness Toolbox**: For implementing adversarial attacks
-- **PyTorch & torchvision**: Core deep learning framework
+- **timm library**: Ross Wightman's PyTorch Image Models
+- **Adversarial attacks research**: Goodfellow et al. (FGSM), Madry et al. (PGD)
+- **Texture bias research**: Geirhos et al., "ImageNet-trained CNNs are biased towards texture" (2019)
+
+## References
+
+1. Liu, Z., et al. "A ConvNet for the 2020s." CVPR 2022.
+2. Goodfellow, I., et al. "Explaining and Harnessing Adversarial Examples." ICLR 2015.
+3. Madry, A., et al. "Towards Deep Learning Models Resistant to Adversarial Attacks." ICLR 2018.
+4. Geirhos, R., et al. "ImageNet-trained CNNs are biased towards texture." ICLR 2019.
 
 ---
-**Author**: Dylan Stechmann  
-**Course**: CAP6415 - Computer Vision  
+**Author**: Dylan Stechmann
+**Course**: CAP6415 - Computer Vision
 **Semester**: Fall 2025
+**Email**: dstechmann2024@fau.edu

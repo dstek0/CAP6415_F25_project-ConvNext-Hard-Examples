@@ -1,0 +1,307 @@
+=============================================================================
+                    WEEK 4 DEVELOPMENT LOG
+                        (Nov 23-30, 2025)
+=============================================================================
+
+Project: Probing ConvNext SOTA Model with Hard Examples
+Student: Dylan Stechmann
+Course: CAP6415 - Computer Vision, Fall 2025
+
+=============================================================================
+What I Got Done This Week:
+=============================================================================
+
+1. PRELIMINARY RESULTS COMPILATION
+
+   This week was focused on compilation and analysis of all the hard examples
+   generated over the previous three weeks. The goal was to synthesize findings
+   into a coherent story about ConvNext's weaknesses.
+
+   KEY METRICS COMPILED:
+   - Total hard examples: 620 across 5 attack categories
+   - FGSM success rate: 60% (epsilon=0.03)
+   - PGD-40 success rate: 92% (epsilon=0.03)
+   - OOD accuracy drops: 25-75% depending on domain shift severity
+   - Most vulnerable classes: Fine-grained categories (dog breeds, birds)
+   - Most robust classes: Geometric/shape-dominant objects (vehicles, tools)
+
+2. VISUALIZATION AND ANALYSIS
+
+   Created comprehensive visualizations to communicate findings:
+
+   A) ATTACK SUCCESS RATE COMPARISON
+   - Bar chart comparing FGSM vs PGD-10 vs PGD-20 vs PGD-40
+   - Clear trend: More iterations = higher success rate (diminishing returns after 20)
+   - Key insight: PGD-40 is 1.5x more effective than single-step FGSM
+
+   B) EPSILON VS SUCCESS RATE CURVES
+   - Plotted success rate as function of perturbation magnitude
+   - Sweet spot at epsilon=0.03-0.05 (effective yet imperceptible)
+   - Above epsilon=0.1, perturbations become visible to humans
+
+   C) CLASS VULNERABILITY HEATMAP
+   - Analyzed which ImageNet categories are most/least vulnerable
+   - Fine-grained classes (breeds, species) cluster as highly vulnerable
+   - Man-made objects with distinctive shapes are most robust
+
+   D) CONFIDENCE DISTRIBUTION ANALYSIS
+   - Compared model confidence on clean vs adversarial images
+   - Surprising finding: Model often MORE confident on adversarial examples
+   - Poor calibration is a serious issue for deployment
+
+   E) OOD DOMAIN BREAKDOWN
+   - Accuracy by domain: Natural (85%) > Paintings (70%) > Sketches (60%) > Cartoons (25%)
+   - Model degrades gracefully on most OOD, but cartoons cause severe failures
+
+3. RESULTS FOLDER POPULATION
+
+   Organized all results into the results/ folder structure:
+
+   results/
+   ├── plots/
+   │   ├── attack_comparison.png       # FGSM vs PGD success rates
+   │   ├── epsilon_curves.png          # Epsilon vs success rate
+   │   ├── class_vulnerability.png     # Heatmap of vulnerable classes
+   │   ├── confidence_distribution.png # Clean vs adversarial confidence
+   │   └── ood_breakdown.png           # OOD accuracy by domain
+   ├── images/
+   │   ├── fgsm_examples/              # Sample FGSM attacks
+   │   ├── pgd_examples/               # Sample PGD attacks
+   │   ├── ood_examples/               # OOD domain samples
+   │   └── corner_case_examples/       # Corner case failures
+   └── README.md                       # Results documentation
+
+4. REPRODUCIBILITY SCRIPTS
+
+   Created standalone Python scripts for reproducibility:
+
+   scripts/
+   ├── attack_utils.py          # Reusable FGSM/PGD attack functions
+   ├── visualization_utils.py   # Plotting utilities
+   ├── run_attacks.py           # Main script to generate adversarial examples
+   └── generate_plots.py        # Generate all result visualizations
+
+   These scripts can be run independently:
+   - `python scripts/run_attacks.py --attack fgsm --epsilon 0.03`
+   - `python scripts/generate_plots.py --output results/plots/`
+
+5. DOCUMENTATION UPDATES
+
+   - Updated README.md with comprehensive project description
+   - Added detailed installation instructions
+   - Documented all command-line interfaces
+   - Added troubleshooting section for common issues
+   - Ensured requirements.txt has exact version numbers
+
+6. CODE CLEANUP AND QUALITY
+
+   - Removed experimental/dead code from notebooks
+   - Added comprehensive docstrings to all functions
+   - Ensured consistent code style across files
+   - Verified all notebooks run end-to-end without errors
+
+=============================================================================
+Preliminary Results Summary:
+=============================================================================
+
+MAIN FINDING: ConvNext-Base, despite being a SOTA model (2022), has
+significant vulnerabilities that can be systematically exploited.
+
+ADVERSARIAL ROBUSTNESS:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Attack Method  │ Success Rate │ Perceptibility │ Compute Cost           │
+├─────────────────────────────────────────────────────────────────────────┤
+│ FGSM           │    60%       │    Low         │ Very Low (0.01s/img)   │
+│ PGD-10         │    85%       │    Low         │ Low (0.1s/img)         │
+│ PGD-20         │    90%       │    Low         │ Medium (0.2s/img)      │
+│ PGD-40         │    92%       │    Low         │ Medium (0.5s/img)      │
+│ Targeted-Easy  │    70%       │    Low         │ Medium                 │
+│ Targeted-Hard  │    40%       │    Medium      │ High                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+DISTRIBUTION SHIFT ROBUSTNESS:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Domain Type         │ Accuracy  │ Drop from Baseline │ Failure Mode    │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Natural Photos      │   85%     │    0% (baseline)   │ N/A             │
+│ Stylized Photos     │   75%     │   -10%             │ Gradual         │
+│ Paintings           │   70%     │   -15%             │ Gradual         │
+│ Sketches            │   60%     │   -25%             │ Gradual         │
+│ Cartoons            │   25%     │   -60%             │ Severe          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+CORRUPTION ROBUSTNESS:
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Corruption Type     │ Accuracy Drop │ Notes                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Brightness x0.2     │    -40%       │ Low light severely impacts model  │
+│ Brightness x2.0     │    -30%       │ Overexposure also problematic     │
+│ Grayscale           │    -15%       │ Color less important than texture │
+│ Hue Shift (90°)     │    -50%       │ Unnatural colors confuse model    │
+│ Heavy Crop (10%)    │    -70%       │ Context is critical               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+KEY INSIGHTS:
+
+1. TEXTURE BIAS IS REAL AND EXPLOITABLE
+   - ConvNext relies heavily on texture patterns over object shape
+   - Attacking texture features is more effective than shape perturbations
+   - This aligns with Geirhos et al. (2019) findings on CNN texture bias
+
+2. FINE-GRAINED CATEGORIES ARE WEAKEST
+   - Dog breeds, cat breeds, bird species are highly vulnerable
+   - The model learned to distinguish these classes via subtle texture cues
+   - Adversarial perturbations easily disrupt these texture-based decisions
+
+3. CONFIDENCE CALIBRATION IS POOR
+   - Model is often 95%+ confident even on completely wrong predictions
+   - No built-in "uncertainty awareness" for adversarial or OOD inputs
+   - This is dangerous for real-world deployment without additional safeguards
+
+4. DISTRIBUTION SHIFT DEGRADES GRACEFULLY (MOSTLY)
+   - Unlike adversarial attacks which cause catastrophic failures
+   - OOD inputs cause gradual accuracy degradation
+   - Exception: Extreme domain shifts (cartoons) still cause severe failures
+
+5. ITERATIVE ATTACKS >> SINGLE-STEP ATTACKS
+   - PGD consistently outperforms FGSM by large margin
+   - Diminishing returns after ~20-30 iterations
+   - Random initialization helps escape local minima
+
+=============================================================================
+Where I'm At:
+=============================================================================
+
+✓ Week 1 (Nov 2-9):   Repo setup, environment configured, model loaded
+✓ Week 2 (Nov 9-16):  Baseline testing, FGSM attack, ~150 examples
+✓ Week 3 (Nov 16-23): PGD, targeted attacks, OOD, corner cases, ~620 examples
+✓ Week 4 (Nov 23-30): Results compilation, analysis, visualizations ← CURRENT
+□ Week 5 (Nov 30-Dec 7): Record demo video
+Final submission: December 8 by 11:59 PM
+
+=============================================================================
+What's Next (Week 5 - Final Week):
+=============================================================================
+
+VIDEO DEMO PREPARATION:
+
+1. SCRIPT OUTLINE
+   - Introduction (2 min): Project motivation, ConvNext background
+   - Repository walkthrough (3 min): Structure, key files, how to run
+   - Live demo (8 min): Run attacks, show results in real-time
+   - Analysis (4 min): Interpret findings, discuss implications
+   - Conclusion (3 min): Summary, limitations, future work
+
+   Total: ~20 minutes (within 10-20 minute requirement)
+
+2. DEMO NOTEBOOK
+   - Create dedicated 05_demo.ipynb for screen recording
+   - Should demonstrate all attack types with visual outputs
+   - Include commentary cells explaining what's happening
+   - Test run-time to ensure demo completes in reasonable time
+
+3. RECORDING LOGISTICS
+   - Software: OBS Studio or similar screen recorder
+   - Audio: USB microphone for clear narration
+   - Resolution: 1080p for readability
+   - Plan for code execution time (may need to pre-run some cells)
+
+4. FINAL POLISH
+   - One more pass through all documentation
+   - Verify all links and references work
+   - Test fresh clone + install to ensure reproducibility
+   - Add any missing edge case handling
+
+=============================================================================
+Technical Notes:
+=============================================================================
+
+VISUALIZATION APPROACH:
+- Used matplotlib + seaborn for consistent, publication-quality plots
+- Color scheme: 'husl' palette for colorblind-friendly visualization
+- All plots saved at 300 DPI for clarity in video demo
+- Consistent figure sizing: 10x6 inches for main plots
+
+SCRIPT DESIGN:
+- All scripts use argparse for flexible command-line usage
+- Sensible defaults so scripts can run without arguments
+- Progress bars (tqdm) for long-running operations
+- Comprehensive error handling and informative error messages
+
+REPRODUCIBILITY CONSIDERATIONS:
+- Set random seeds where applicable (torch.manual_seed(42))
+- requirements.txt specifies exact versions
+- Data paths are configurable via command-line or config file
+- Results should match within numerical precision
+
+=============================================================================
+Challenges This Week:
+=============================================================================
+
+1. BALANCING DEPTH VS BREADTH
+   With 620 examples across 5 attack types, there's a lot to analyze.
+   Had to make strategic choices about which visualizations to prioritize.
+   Focused on those that tell the clearest story about model weaknesses.
+
+2. SCRIPT REFACTORING
+   Converting notebook code to standalone scripts required careful thought
+   about interface design. Wanted scripts that are both easy to use for
+   demos and flexible enough for deeper experimentation.
+
+3. VISUALIZATION CLARITY
+   Initial plots were too cluttered. Spent time iterating on design to
+   ensure key findings are immediately visible. Less is more.
+
+4. DOCUMENTATION COMPLETENESS
+   Writing good documentation takes longer than expected. Had to balance
+   between thorough explanations and concise instructions.
+
+=============================================================================
+Deliverables Checklist:
+=============================================================================
+
+Development Log (10%):     [■■■■□] 4/5 weeks complete
+Description/README (10%):  [■■■■■] Complete with all sections
+Code Documentation (20%):  [■■■■□] Well-documented, some polish remaining
+Reproducibility (30%):     [■■■■□] Scripts ready, needs fresh-clone test
+Video Demo (30%):          [□□□□□] Prepared, recording in Week 5
+
+Overall project: ~80% complete, on track for final submission
+
+=============================================================================
+Hours Spent This Week:
+=============================================================================
+
+- Sunday (Nov 23):    3 hours - Results organization
+- Monday (Nov 24):    4 hours - Visualization creation
+- Tuesday (Nov 25):   3 hours - Script development
+- Wednesday (Nov 26): 2 hours - Documentation updates
+- Thursday (Nov 27):  2 hours - Code cleanup (Thanksgiving - lighter day)
+- Friday (Nov 28):    3 hours - Final polish, testing
+- Saturday (Nov 29):  2 hours - Week4log, demo prep
+- Sunday (Nov 30):    2 hours - Final review, prepare for Week 5
+
+Total: ~21 hours
+
+=============================================================================
+Reflection:
+=============================================================================
+
+This project has been an excellent deep-dive into understanding model
+robustness. The hands-on experience of implementing attacks and seeing
+exactly how and why they work provides much better intuition than just
+reading papers.
+
+Key personal takeaways:
+1. SOTA accuracy doesn't mean SOTA robustness - there's a huge gap
+2. Understanding failure modes is as important as achieving high accuracy
+3. Systematic probing reveals patterns that random testing misses
+4. Good visualization is critical for communicating technical findings
+
+Looking forward to creating the demo video and wrapping up the project!
+
+=============================================================================
+
+READY FOR WEEK 5: Record demo video and final submission!
+
+=============================================================================
