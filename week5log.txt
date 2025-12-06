@@ -1,0 +1,193 @@
+=============================================================================
+                    WEEK 5 DEVELOPMENT LOG
+                        (Nov 30 - Dec 7, 2025)
+=============================================================================
+
+Project: Probing ConvNext SOTA Model with Hard Examples
+Student: Dylan Stechmann
+Course: CAP6415 - Computer Vision, Fall 2025
+
+=============================================================================
+What I Got Done This Week:
+=============================================================================
+
+1. VIDEO DEMO PREPARATION
+
+   This week was all about preparing the final demo and polishing everything
+   for submission. Spent time organizing the presentation flow, making sure
+   all notebooks run cleanly, and verifying the scripts work as expected.
+   
+   Created a comprehensive demo script that covers:
+   - Project overview and motivation
+   - Repository structure walkthrough  
+   - Running the code (notebooks and scripts)
+   - Results discussion with visualizations
+   - Key findings and takeaways
+   - Limitations and future work
+   
+   Tested screen recording software on my laptop and did a couple practice
+   runs to make sure I can hit the 10-20 minute target.
+
+2. FINAL POLISHING & DOCUMENTATION
+
+   Went back through all the code and added more comments to make sure the
+   TA can understand what's happening. Made sure requirements.txt is accurate.
+   
+   Verified that:
+   - All notebooks run from top to bottom without errors
+   - Scripts have proper command-line interfaces
+   - Results README clearly explains all findings
+   - Main README has installation and usage instructions
+   - All plots are properly saved and referenced
+
+3. RESULTS VERIFICATION
+
+   Double-checked all the numbers in the results:
+   - Attack success rates: FGSM ~60%, PGD-20 ~90%
+   - OOD drops: Cartoons worst (-60%), paintings/sketches moderate
+   - Corruption impacts: Heavy crop devastating (-70%), lighting significant
+   - Class vulnerability: Fine-grained categories most vulnerable
+   
+   Generated all final plots using generate_plots.py script. Everything looks
+   good and is reproducible.
+
+4. REPOSITORY FINAL CHECK
+
+   Made sure GitHub repo has everything needed:
+   ✓ All 5 weekly logs (week1-5)
+   ✓ Complete README with abstract, findings, usage instructions
+   ✓ requirements.txt with all dependencies
+   ✓ Working notebooks (00_model_loading, 01_baseline_testing)
+   ✓ Reproducible scripts (run_attacks.py, generate_plots.py)
+   ✓ Results folder with plots and documentation
+   ✓ Proper .gitignore (no huge model files committed)
+
+=============================================================================
+Video Demo Plan:
+=============================================================================
+
+Following the project requirements for video structure:
+
+**Part 1: Introduction (3-5 minutes)**
+- Quick intro: What's the project about?
+- Repository structure overview
+- Show folder organization and key files
+
+**Part 2: Running the Code (8-12 minutes)**
+- Run notebook 00_model_loading.ipynb
+- Run notebook 01_baseline_testing.ipynb
+- Execute attack scripts from command line
+- Generate plots using generate_plots.py
+- Show how results appear in results/ folder
+
+**Part 3: Results Discussion (5-8 minutes)**
+- Go through each plot and explain findings
+- Discuss key insights about ConvNext vulnerabilities
+- Show concrete examples of hard cases
+- Explain what patterns emerged
+
+**Part 4: Wrap-up (2-3 minutes)**
+- Limitations: Only tested ConvNext-Base, limited to ImageNet
+- Future work: Test other architectures, more attack types
+- What I learned from this project
+
+Total target: 15-18 minutes (within 10-20 minute requirement)
+
+=============================================================================
+Technical Summary:
+=============================================================================
+
+Final statistics on the project:
+
+**Hard Examples Generated:**
+- Total: ~620 examples across all categories
+- FGSM adversarial: ~150 examples
+- PGD adversarial: ~200 examples  
+- Targeted attacks: ~100 examples
+- OOD samples: ~150 examples
+- Corner cases: ~120 examples
+
+**Key Findings:**
+1. PGD-40 achieves 92% attack success at epsilon=0.03
+2. Model has severe texture bias (as predicted by Geirhos et al.)
+3. Cartoons cause 60% accuracy drop (worst OOD domain)
+4. Model stays confident even when completely wrong
+5. Fine-grained categories (dog breeds, bird species) most vulnerable
+
+**Code Structure:**
+- 2 Jupyter notebooks for interactive work
+- 4 Python scripts for reproducibility
+- 6 result plots documenting findings
+- Comprehensive documentation throughout
+
+=============================================================================
+Where I'm At (Final Week):
+=============================================================================
+
+✓ Week 1 (Nov 2-9):  Repo setup, environment, model loaded
+✓ Week 2 (Nov 9-16): FGSM attacks, ~150 adversarial examples
+✓ Week 3 (Nov 16-23): PGD attacks, OOD testing, corner cases
+✓ Week 4 (Nov 23-30): Results compilation, all visualizations
+✓ Week 5 (Nov 30-Dec 7): Video demo preparation, final polish
+
+Final submission: December 8 by 11:59 PM
+
+=============================================================================
+Deliverables Checklist (FINAL):
+=============================================================================
+
+Development Log (10%):     [■■■■■] 5/5 weeks complete ✓
+Description/README (10%):  [■■■■■] Complete with findings ✓
+Code Documentation (20%):  [■■■■■] Well-commented ✓
+Reproducibility (30%):     [■■■■■] Scripts + notebooks ready ✓
+Video Demo (30%):          [■■■■□] Recording in progress
+
+TOTAL: 94% complete (just need to record and submit video)
+
+=============================================================================
+Challenges This Week:
+=============================================================================
+
+- Had to make sure everything actually runs on a fresh machine. Tested in
+  a clean environment to verify requirements.txt is complete.
+  
+- Practiced the demo a few times - harder than expected to talk through
+  technical content while screen recording. Need to sound natural but also
+  explain things clearly for the professor/TA.
+  
+- Balancing detail vs. time - so much to show but only 10-20 minutes!
+  Decided to focus on the most interesting findings rather than exhaustively
+  covering everything.
+
+=============================================================================
+What I Learned:
+=============================================================================
+
+Technical:
+- SOTA models are surprisingly vulnerable to adversarial attacks
+- Texture bias is a real and exploitable weakness in CNNs
+- OOD robustness varies wildly by domain type
+- Confidence calibration is a major issue in deep learning
+
+Project Management:
+- Weekly logs really helped track progress
+- Breaking project into phases made it manageable  
+- Version control is essential for academic projects
+- Documentation takes longer than you think but is worth it
+
+Computer Vision:
+- Difference between FGSM and PGD attacks
+- How to generate targeted adversarial examples
+- Importance of probing models beyond standard accuracy
+- Why leaderboard numbers don't tell the whole story
+
+=============================================================================
+Hours This Week: ~6-8 hours
+- 2 hrs: Final code polishing and testing
+- 2 hrs: Documentation improvements  
+- 2 hrs: Demo script preparation and practice
+- 2 hrs: Verification and final checks
+
+Total Project Hours: ~45-50 hours over 5 weeks
+=============================================================================
+
