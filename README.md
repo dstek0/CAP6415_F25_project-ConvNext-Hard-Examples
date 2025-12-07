@@ -7,11 +7,13 @@ State-of-the-art computer vision models like ConvNext achieve impressive accurac
 
 | Finding | Details |
 |---------|---------|
-| **Adversarial Vulnerability** | PGD-40 achieves 92% attack success rate at epsilon=0.03 |
-| **Texture Bias** | Model relies heavily on texture over shape, confirming Geirhos et al. (2019) |
-| **OOD Robustness** | Graceful degradation on most domains, severe failure on cartoons (-60%) |
-| **Confidence Calibration** | Model remains highly confident even when completely wrong |
-| **Class Vulnerability** | Fine-grained categories (dog/cat breeds, bird species) most vulnerable |
+| **Adversarial Vulnerability** | PGD achieves **100% attack success rate** at epsilon=0.03 |
+| **FGSM Effectiveness** | Even simple FGSM attacks achieve **92.6% success** at epsilon=0.03 |
+| **Minimal Perturbations** | Attacks succeed with epsilon as low as 0.01 (imperceptible to humans) |
+| **Confidence Calibration** | Model remains highly confident (~30%) even on adversarial inputs |
+| **Iterative vs Single-Step** | PGD-5 (100%) significantly outperforms FGSM (92.6%) |
+
+*Results obtained on 1,000 CIFAR-10 test images using NVIDIA A100 GPU*
 
 ## What I Investigated
 
@@ -25,7 +27,7 @@ The goal isn't just to break the model, but to understand its failure modes:
 
 ## Model & Dataset
 
-I'm using **ConvNext-Base** pretrained on ImageNet-1K (via the `timm` library). For testing, I work with subsets of ImageNet validation data plus custom hard examples generated throughout the project.
+I'm using **ConvNext-Base** pretrained on ImageNet-1K (via the `timm` library). For adversarial attack experiments, I use CIFAR-10 test images resized to 224x224 - this demonstrates attack effectiveness while keeping experiments tractable.
 
 ConvNext (Liu et al., CVPR 2022) is a modern pure-CNN architecture that achieves competitive performance with Vision Transformers, making it an excellent target for robustness analysis.
 
@@ -54,12 +56,15 @@ ConvNext (Liu et al., CVPR 2022) is a modern pure-CNN architecture that achieves
 
 ![Attack Comparison](results/plots/attack_comparison.png)
 
-| Attack | Success Rate | Compute Time |
-|--------|-------------|--------------|
-| FGSM | 60% | 0.01s/image |
-| PGD-10 | 85% | 0.1s/image |
-| PGD-20 | 90% | 0.2s/image |
-| PGD-40 | 92% | 0.5s/image |
+| Attack | Success Rate | Notes |
+|--------|-------------|-------|
+| FGSM | 92.6% | Single-step attack |
+| PGD-5 | 100% | 5 iterations |
+| PGD-10 | 100% | 10 iterations |
+| PGD-20 | 100% | 20 iterations |
+| PGD-40 | 100% | 40 iterations |
+
+*Experiments conducted on NVIDIA A100-SXM4-80GB*
 
 ### Out-of-Distribution Accuracy
 
