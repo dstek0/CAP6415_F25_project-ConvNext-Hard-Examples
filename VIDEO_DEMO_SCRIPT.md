@@ -43,7 +43,7 @@ Before you start recording, make sure:
 
 **[Point out the key findings table]**
 
-> "Some of the main findings: PGD attacks achieve 92% success rate with very small perturbations, the model has a strong texture bias, and it completely fails on cartoon images with a 60% accuracy drop."
+> "Some of the main findings: PGD attacks achieve 100% success rate with very small perturbations - meaning they fool the model on every single image. Even simple FGSM attacks achieve 92.6% success. The model was tested on an NVIDIA A100 GPU with 1,000 real test images."
 
 **[Scroll down to repository structure section]**
 
@@ -209,9 +209,9 @@ python generate_plots.py --output ../results/plots
 
 > "First, the attack comparison. This shows the success rates of different attacks at epsilon 0.03."
 
-> "FGSM, the simple one-step attack, achieves 60% success rate. But PGD, the iterative attack, is much more powerful—PGD with 10 steps gets 85%, with 20 steps gets 90%, and with 40 steps reaches 92%."
+> "FGSM, the simple one-step attack, achieves 92.6% success rate - that's already devastating. But PGD, the iterative attack, is even more powerful—PGD with just 5 steps achieves 100% success rate. PGD-10, PGD-20, and PGD-40 all maintain 100% success."
 
-> "Interesting finding: there are diminishing returns after about 20 iterations. Going from PGD-20 to PGD-40 only improves success by 2%, so 20 iterations seems like the sweet spot."
+> "This is a striking finding: even with minimal iterations, PGD completely breaks ConvNext-Base. Every single image can be successfully attacked with imperceptible perturbations."
 
 ### Plot 2: Epsilon Curves [13:30-14:30]
 
